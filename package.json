@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "json-logic-js": "^2.0.5",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/json-logic-js": "^2.0.7",
+    "@types/node": "^20.14.10",
+    "@types/uuid": "^10.0.0"
+  },
+  "name": "@smucclaw/oldmathlangts",
+  "version": "1.0.0",
+  "description": "typescript runtime for meng's mathlang, to be deprecated",
+  "main": "mathlang.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smucclaw/oldmathlangts.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/smucclaw/oldmathlangts/issues"
+  },
+  "homepage": "https://github.com/smucclaw/oldmathlangts#readme"
+}
