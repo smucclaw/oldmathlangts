@@ -23,6 +23,7 @@ type NumFoldOpT   = typeof NumFoldOp   [keyof typeof NumFoldOp]
 type BoolFoldOpT  = typeof BoolFoldOp  [keyof typeof BoolFoldOp]
 
 export var symTab : Record<string, any> = {}
+export type ExprFn = () => Expr<any>;
 
 // initialize the symtab with user-provided data
 export function initSymTab (st : Record<string, any>) {
