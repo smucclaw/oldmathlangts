@@ -13,6 +13,7 @@ export const BoolTriOp   = { IfThenElse: 0 }                                    
 export const NumToBoolOp = { NBlt:       0, NBlte:   1, NBgt:   2, NBgte:   3, NBeq: 4, NBneq: 5 } as const  // Numeric to Bool:       binary: > >= < <= == !=
 export const NumFoldOp   = { Max:        0, Min:     1, Sum:    2, Product: 3 }                    as const  // Fold numeric lists:    max, min, sum, product
 export const BoolFoldOp  = { Any:        0, All:     1 }                                           as const  // Fold boolean lists:    any, all
+export const StrToBoolOp = { StrEq:      0, StrNeq:  1 }                                           as const  // String Equality
 
 type NumBinOpT    = typeof NumBinOp    [keyof typeof NumBinOp]
 type BoolBinOpT   = typeof BoolBinOp   [keyof typeof BoolBinOp]
@@ -21,6 +22,7 @@ type BoolTriOpT   = typeof BoolTriOp   [keyof typeof BoolTriOp]
 type NumToBoolOpT = typeof NumToBoolOp [keyof typeof NumToBoolOp]
 type NumFoldOpT   = typeof NumFoldOp   [keyof typeof NumFoldOp]
 type BoolFoldOpT  = typeof BoolFoldOp  [keyof typeof BoolFoldOp]
+type StrToBoolOpT = typeof StrToBoolOp [keyof typeof StrToBoolOp ]
 
 export var symTab : Record<string, any> = {}
 export type ExprFn = () => Expr<any>;
@@ -52,6 +54,8 @@ export abstract class Expr<Base> {
       console.info(`getVar: ${this.name} saving wanted variable to symTab, ${this.name} = ${this.val}`)
       return this
     }
+    // we may have to be smart about GetVar("parent.child") if we have nested records; as a hack we can flatten all nested records to just strings.
+    
     for (let c of this.chil) { let r = c.getVar(want)
                                if (r!= undefined) { return r} }
     return undefined
@@ -77,7 +81,7 @@ export class GetVar<Base> extends Expr<Base> {
     super();
     this.val = symTab[this.name];
     if (this.val == undefined) {
-      console.log(`GetVar on ${name} returned undefined! If this is not expected, you may want to uncomment symtab dump in mathlang.ts`);
+      console.log(`GetVar on ${name} returned undefined! If this is not expected, you may want to uncomment symtab dump in mathlang.ts. Or maybe you mean to treat this as a string.`);
 //      console.log("symtab is")
 //      console.log(symTab)
     }
@@ -342,4 +346,26 @@ function shouldRoundToNearestInt(float: number, threshold: number = 0.001): bool
   return difference <= threshold;
 }
 
+
+// string expressions
+abstract class StrExpr extends Expr<string> { }
+
+export class Str0 extends StrExpr {
+  constructor ( public name: string, public val: string | undefined ) { super(); this.expl = name }
+}
+
+// string equality
+export class StrToBool2 extends BoolExpr {
+  constructor( public name:     string,
+               public operator: StrToBoolOpT,
+               public arg1:     StrExpr,
+               public arg2:     StrExpr ) {
+    super();
+    this.chil=[arg1,arg2]
+    if (arg1.val == undefined && arg2.val == undefined) { this.val = undefined; this.expl = `StrToBool2 on two undefined elements ${arg1.name} / ${arg2.name}`; return }
+
+    switch(this.operator) {
+      case StrToBoolOp.StrEq:  this.expl = "string equal";             this.val = arg1.val == arg2.val;          this.jsonLogicOp = "=="; break
+      case StrToBoolOp.StrNeq: this.expl = "string unequal";           this.val = arg1.val != arg2.val;          this.jsonLogicOp = "!="; break
+    } } }
 

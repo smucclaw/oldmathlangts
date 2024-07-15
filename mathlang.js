@@ -3,7 +3,12 @@
 // evaluation is eager and happens at construction time.
 //
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.asDot = exports.asGr = exports.exprReduce = exports.explTrace = exports.BoolFold = exports.NumFold = exports.NumToBool2 = exports.Bool3 = exports.Bool2 = exports.Bool1 = exports.Bool0 = exports.Num2 = exports.SetVar = exports.GetVar = exports.Num0 = exports.Expr = exports.initSymTab = exports.symTab = exports.BoolFoldOp = exports.NumFoldOp = exports.NumToBoolOp = exports.BoolTriOp = exports.BoolUnaOp = exports.BoolBinOp = exports.NumBinOp = void 0;
+exports.StrToBool2 = exports.Str0 = exports.BoolFold = exports.NumFold = exports.NumToBool2 = exports.Bool3 = exports.Bool2 = exports.Bool1 = exports.Bool0 = exports.Num2 = exports.SetVar = exports.GetVar = exports.Num0 = exports.Expr = exports.symTab = exports.StrToBoolOp = exports.BoolFoldOp = exports.NumFoldOp = exports.NumToBoolOp = exports.BoolTriOp = exports.BoolUnaOp = exports.BoolBinOp = exports.NumBinOp = void 0;
+exports.initSymTab = initSymTab;
+exports.explTrace = explTrace;
+exports.exprReduce = exprReduce;
+exports.asGr = asGr;
+exports.asDot = asDot;
 const uuid_1 = require("uuid");
 // typescript recommends against enum per se, but offers this suggestion, which is unavoidably noisy
 exports.NumBinOp = { Add: 0, Sub: 1, Mul: 2, Div: 3, MaxOf2: 4, MinOf2: 5, Mod: 6 }; // Numeric expressions:   binary:  + - * /
@@ -13,13 +18,13 @@ exports.BoolTriOp = { IfThenElse: 0 }; //                        ternary: if the
 exports.NumToBoolOp = { NBlt: 0, NBlte: 1, NBgt: 2, NBgte: 3, NBeq: 4, NBneq: 5 }; // Numeric to Bool:       binary: > >= < <= == !=
 exports.NumFoldOp = { Max: 0, Min: 1, Sum: 2, Product: 3 }; // Fold numeric lists:    max, min, sum, product
 exports.BoolFoldOp = { Any: 0, All: 1 }; // Fold boolean lists:    any, all
+exports.StrToBoolOp = { StrEq: 0, StrNeq: 1 }; // String Equality
 exports.symTab = {};
 // initialize the symtab with user-provided data
 function initSymTab(st) {
     exports.symTab = Object.assign({}, st);
     return exports.symTab;
 }
-exports.initSymTab = initSymTab;
 class Expr {
     getVar(want) {
         if (exports.symTab.hasOwnProperty(this.name)) {
@@ -31,6 +36,7 @@ class Expr {
             console.info(`getVar: ${this.name} saving wanted variable to symTab, ${this.name} = ${this.val}`);
             return this;
         }
+        // we may have to be smart about GetVar("parent.child") if we have nested records; as a hack we can flatten all nested records to just strings.
         for (let c of this.chil) {
             let r = c.getVar(want);
             if (r != undefined) {
@@ -66,7 +72,7 @@ class GetVar extends Expr {
         this.name = name;
         this.val = exports.symTab[this.name];
         if (this.val == undefined) {
-            console.log(`GetVar on ${name} returned undefined! If this is not expected, you may want to uncomment symtab dump in mathlang.ts`);
+            console.log(`GetVar on ${name} returned undefined! If this is not expected, you may want to uncomment symtab dump in mathlang.ts. Or maybe you mean to treat this as a string.`);
             //      console.log("symtab is")
             //      console.log(symTab)
         }
@@ -449,13 +455,11 @@ function explTrace(expr, depth) {
         explTrace(c, depth + 1);
     }
 }
-exports.explTrace = explTrace;
 // fold an expr to a flat dictionary containing all childrens' .name = .val pairs
 function exprReduce(expr) {
     return (expr.chil.reduce((result, current) => { return (Object.assign(Object.assign({}, result), exprReduce(current))); }, { [expr.name]: expr.val }));
     // note children names will overwrite parent name
 }
-exports.exprReduce = exprReduce;
 // translate an expr to a computation/data-flow graph suitable for graphviz.
 function asGr(expr) {
     return ({ nlabel: expr.name,
@@ -464,7 +468,6 @@ function asGr(expr) {
         children: expr.chil.map(o => asGr(o))
     });
 }
-exports.asGr = asGr;
 function asDot(expr, dim) {
     if (expr.name == "noShow" && expr.val > 0) {
         return (`  "${expr.uuid}" [ label="${expr.val}\\n(pruned)" ]`);
@@ -501,8 +504,48 @@ ${edgelist}
 ${recursed}
 `);
 }
-exports.asDot = asDot;
 function shouldRoundToNearestInt(float, threshold = 0.001) {
     const difference = Math.abs(float - Math.round(float));
     return difference <= threshold;
 }
+// string expressions
+class StrExpr extends Expr {
+}
+class Str0 extends StrExpr {
+    constructor(name, val) {
+        super();
+        this.name = name;
+        this.val = val;
+        this.expl = name;
+    }
+}
+exports.Str0 = Str0;
+// string equality
+class StrToBool2 extends BoolExpr {
+    constructor(name, operator, arg1, arg2) {
+        super();
+        this.name = name;
+        this.operator = operator;
+        this.arg1 = arg1;
+        this.arg2 = arg2;
+        this.chil = [arg1, arg2];
+        if (arg1.val == undefined && arg2.val == undefined) {
+            this.val = undefined;
+            this.expl = `StrToBool2 on two undefined elements ${arg1.name} / ${arg2.name}`;
+            return;
+        }
+        switch (this.operator) {
+            case exports.StrToBoolOp.StrEq:
+                this.expl = "string equal";
+                this.val = arg1.val == arg2.val;
+                this.jsonLogicOp = "==";
+                break;
+            case exports.StrToBoolOp.StrNeq:
+                this.expl = "string unequal";
+                this.val = arg1.val != arg2.val;
+                this.jsonLogicOp = "!=";
+                break;
+        }
+    }
+}
+exports.StrToBool2 = StrToBool2;
