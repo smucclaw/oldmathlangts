@@ -96,6 +96,7 @@ export class SetVar<Base> extends Expr<Base> {
   ) {
     super();
     symTab[this.name] = this.val;
+    console.log(`SetVar saving {this.name} = {this.val}`)
   }
 }
 
@@ -320,7 +321,7 @@ export function exprReduce(expr: Expr<any>): any {
 
 type NLabel = string
 type grNode = { nlabel: NLabel; nval: any; operator: string; children: grNode[] }
-type grEdge = { elabel: string; nIn: NLabel; nOut: NLabel }
+// type grEdge = { elabel: string; nIn: NLabel; nOut: NLabel }
 // translate an expr to a computation/data-flow graph suitable for graphviz.
 export function asGr(expr: Expr<any>): grNode {
   return (
@@ -370,10 +371,14 @@ function shouldRoundToNearestInt(float: number, threshold: number = 0.001): bool
 abstract class StrExpr extends Expr<string> { }
 
 export class Str0 extends StrExpr {
-  constructor(public name: string, public val: string | undefined) {
+  constructor(public name: string, public val : string) {
     super(); this.expl = name;
-    if (val == undefined) { this.val = this.name }
   }
+}
+
+export function Str0_(name: string, val?: string) : Str0 {
+  if (val == undefined) { val = name }
+  return new Str0(name, val)
 }
 
 // string equality

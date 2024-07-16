@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@smucclaw/oldmathlangts": "^1.0.6",
     "json-logic-js": "^2.0.5",
     "uuid": "^10.0.0"
   },
@@ -9,7 +10,7 @@
     "@types/uuid": "^10.0.0"
   },
   "name": "@smucclaw/oldmathlangts",
-  "version": "1.0.3",
+  "version": "1.0.12",
   "description": "typescript runtime for meng's mathlang, to be deprecated",
   "main": "mathlang.js",
   "scripts": {
