@@ -126,7 +126,7 @@ var SetVar = /** @class */ (function (_super) {
         _this.name = name;
         _this.val = val;
         exports.symTab[_this.name] = _this.val;
-        console.log("SetVar saving {this.name} = {this.val}");
+        console.log("SetVar saving ".concat(_this.name, " = ").concat(_this.val));
         return _this;
     }
     return SetVar;

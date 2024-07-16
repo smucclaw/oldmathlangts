@@ -65,6 +65,7 @@ export abstract class Expr<Base> {
 
   constructor() {
     this.uuid = uuidv4();
+    symTab[this.name] = this.val;
   }
 
 }
@@ -96,9 +97,12 @@ export class SetVar<Base> extends Expr<Base> {
   ) {
     super();
     symTab[this.name] = this.val;
-    console.log(`SetVar saving {this.name} = {this.val}`)
-  }
+    console.log(`SetVar saving ${this.name} = ${this.val}`)
+    }
 }
+
+// SetVar doesn't preserve a tree of child expressions, because it is called with the value not the expression.
+// we work around this by having each class explicitly save output into the symtab
 
 // binary numeric expressions
 export class Num2 extends NumExpr {
