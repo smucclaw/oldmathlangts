@@ -10,7 +10,7 @@
     "@types/uuid": "^10.0.0"
   },
   "name": "@smucclaw/oldmathlangts",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "typescript runtime for meng's mathlang, to be deprecated",
   "main": "mathlang.js",
   "scripts": {

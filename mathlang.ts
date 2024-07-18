@@ -38,7 +38,7 @@ type Expl = string;
 export abstract class Expr<Base> {
   expl: Expl = "uninitialized";
   name !: string;
-  val  !: Base | undefined;
+  val: Base | undefined;
   chil: Expr<any>[] = [];
   jsonLogicOp?: jsonFactory.ReservedOperations; // to be obsoleted by actual jsonLogic attribute below
   jsonLogic?: jsonFactory.RulesLogic;
@@ -83,10 +83,22 @@ export class GetVar<Base> extends Expr<Base> {
   constructor(public name: string) {
     super();
     this.val = symTab[this.name];
+
     if (this.val == undefined) {
       console.log(`GetVar on ${name} returned undefined! If this is not expected, you may want to uncomment symtab dump in mathlang.ts. Or maybe you mean to treat this as a string.`);
       //      console.log("symtab is")
       //      console.log(symTab)
+    }
+  }
+}
+
+export class GetVarBool extends GetVar<boolean> {
+  constructor(public name: string) {
+    console.log(`GetVarBool: running on ${name}`)
+    super(name);
+    if (this.val == undefined) {
+      console.log("GetVar of BoolExpr is null, returning false; thus do we approximate a ternary logic with negation as failure");
+      this.val = false as any;
     }
   }
 }
